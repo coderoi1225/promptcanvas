@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptCanvas — 맞춤형 디자인 프롬프트 앱</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.12);
+      --line: rgba(255,255,255,0.14);
+      --text: #eef2ff;
+      --muted: #b6c1e2;
+      --brand: #7c5cff;
+      --brand2: #1fd1c2;
+      --good: #14b86a;
+      --warn: #f59e0b;
+      --shadow: 0 20px 50px rgba(0,0,0,0.35);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124,92,255,0.35), transparent 26%),
+        radial-gradient(circle at top right, rgba(31,209,194,0.2), transparent 28%),
+        linear-gradient(180deg, #0a0f1d 0%, #0f172a 100%);
+      min-height: 100vh;
+    }
+    .wrap {
+      width: min(1240px, calc(100vw - 32px));
+      margin: 28px auto 40px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .hero-card, .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+    .hero-card {
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -100px -100px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,92,255,0.35), transparent 60%);
+      pointer-events: none;
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .pill-row {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pill {
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+      font-size: 13px;
+    }
+    .kpi {
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+      align-content: start;
+    }
+    .kpi-box {
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+    }
+    .kpi-box strong { font-size: 22px; display: block; margin-bottom: 6px; }
+    .kpi-box span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .main {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .card { padding: 20px; }
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field { display: grid; gap: 8px; margin-bottom: 12px; }
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 13px 14px;
+      outline: none;
+      font-size: 14px;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(124,92,255,0.8);
+      box-shadow: 0 0 0 4px rgba(124,92,255,0.15);
+    }
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, opacity .12s ease, background .2s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .primary {
+      background: linear-gradient(135deg, var(--brand), #9b7bff);
+      color: white;
+      flex: 1;
+      min-width: 160px;
+    }
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .ghost {
+      background: rgba(31,209,194,0.12);
+      color: #c6fff9;
+      border: 1px solid rgba(31,209,194,0.25);
+    }
+    .result-head {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 8px 11px;
+      background: rgba(31,209,194,0.12);
+      color: #c6fff9;
+      border: 1px solid rgba(31,209,194,0.22);
+    }
+    .output {
+      background: rgba(5,10,20,0.62);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      min-height: 260px;
+      white-space: pre-wrap;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .subgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .mini {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+    }
+    .mini h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+    .mini p, .mini ul {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .mini ul { padding-left: 18px; }
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: center;
+    }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(20,184,106,0.95);
+      color: white;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all .2s ease;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (max-width: 1080px) {
+      .main { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .wrap { width: min(100vw - 18px, 1240px); margin-top: 12px; }
+      .grid, .subgrid { grid-template-columns: 1fr; }
+      .hero-card, .card { padding: 16px; }
+      .button-row button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-card">
+        <h1>PromptCanvas<br>맞춤형 디자인 프롬프트 앱</h1>
+        <p>
+          카드뉴스, 썸네일, 상세페이지, 배너, SNS 포스트 등 다양한 디자인 유형을 조합형 UI로 선택하면
+          바로 복사 가능한 고품질 프롬프트를 생성합니다. 기획자가 직접 문장을 쓰지 않아도,
+          원하는 목적과 스타일만 선택하면 이미지 생성 도구에 붙여넣을 수 있는 실전형 프롬프트가 만들어집니다.
+        </p>
+        <div class="pill-row">
+          <span class="pill">카드뉴스</span>
+          <span class="pill">유튜브 썸네일</span>
+          <span class="pill">온라인 쇼핑 상세페이지</span>
+          <span class="pill">광고 배너</span>
+          <span class="pill">인스타그램 포스트</span>
+          <span class="pill">프롬프트 복사</span>
+        </div>
+      </div>
+      <div class="hero-card kpi">
+        <div class="kpi-box">
+          <strong>5개</strong>
+          <span>즉시 사용 가능한 디자인 포맷 기본 제공</span>
+        </div>
+        <div class="kpi-box">
+          <strong>조합형</strong>
+          <span>목적, 톤, 색상, 구도, CTA, 플랫폼을 선택해 프롬프트 생성</span>
+        </div>
+        <div class="kpi-box">
+          <strong>복사 1초</strong>
+          <span>결과를 바로 복사해서 이미지 생성 도구에 붙여넣기 가능</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="main">
+      <div class="card">
+        <h2 class="section-title">프롬프트 빌더</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="designType">디자인 유형</label>
+            <select id="designType"></select>
+          </div>
+          <div class="field">
+            <label for="platform">사용 플랫폼</label>
+            <select id="platform"></select>
+          </div>
+          <div class="field">
+            <label for="styleTone">스타일 톤</label>
+            <select id="styleTone"></select>
+          </div>
+          <div class="field">
+            <label for="target">타깃 고객</label>
+            <input id="target" placeholder="예: 20~30대 여성, 창업자, 학부모" />
+          </div>
+          <div class="field">
+            <label for="brandMood">브랜드/무드</label>
+            <select id="brandMood"></select>
+          </div>
+          <div class="field">
+            <label for="colorMood">컬러 무드</label>
+            <select id="colorMood"></select>
+          </div>
+          <div class="field">
+            <label for="layout">레이아웃</label>
+            <select id="layout"></select>
+          </div>
+          <div class="field">
+            <label for="ratio">비율</label>
+            <select id="ratio"></select>
+          </div>
+          <div class="field">
+            <label for="cta">콜투액션</label>
+            <select id="cta"></select>
+          </div>
+          <div class="field">
+            <label for="engine">권장 생성 엔진</label>
+            <select id="engine"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="topic">상품/주제/캠페인</label>
+          <input id="topic" placeholder="예: 신제품 선크림 런칭, AI 강의 모집, 여름 세일" />
+        </div>
+        <div class="field">
+          <label for="headline">핵심 메시지</label>
+          <input id="headline" placeholder="예: 3초 흡수, 백탁 없는 데일리 선케어" />
+        </div>
+        <div class="field">
+          <label for="mustInclude">반드시 포함할 요소</label>
+          <textarea id="mustInclude" placeholder="예: 제품 패키지 정면 노출, 가격 영역, 혜택 배지, 한글 텍스트 영역 확보"></textarea>
+        </div>
+        <div class="field">
+          <label for="avoid">피하고 싶은 요소</label>
+          <textarea id="avoid" placeholder="예: 과한 3D 효과, 저가형 느낌, 복잡한 배경, 과도한 텍스트"></textarea>
+        </div>
+
+        <div class="button-row">
+          <button class="primary" id="generateBtn">프롬프트 생성</button>
+          <button class="secondary" id="randomBtn">추천 조합</button>
+          <button class="ghost" id="resetBtn">초기화</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="result-head">
+          <h2 class="section-title" style="margin:0;">생성 결과</h2>
+          <span class="tag" id="modeBadge">복사해서 바로 사용 가능</span>
+        </div>
+        <div class="output" id="output">왼쪽 옵션을 선택한 뒤 “프롬프트 생성”을 누르면 이곳에 결과가 표시됩니다.</div>
+        <div class="button-row" style="margin-top:14px;">
+          <button class="primary" id="copyBtn">프롬프트 복사</button>
+          <button class="secondary" id="briefBtn">짧은 버전</button>
+          <button class="secondary" id="detailBtn">상세 버전</button>
+        </div>
+
+        <div class="subgrid">
+          <div class="mini">
+            <h3>추천 활용 방식</h3>
+            <ul>
+              <li>이미지 생성기 입력창에 그대로 붙여넣기</li>
+              <li>브랜드명, 제품명만 바꿔 빠르게 재사용</li>
+              <li>팀 내 디자이너/마케터 공통 템플릿으로 활용</li>
+            </ul>
+          </div>
+          <div class="mini">
+            <h3>출력 로직</h3>
+            <p id="logicHint">디자인 유형에 따라 카피 구조, 레이아웃 지시, 텍스트 영역 확보 지시문이 자동 반영됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      PromptCanvas MVP · 정적 웹앱 프로토타입 · 향후 저장/공유/브랜드 프리셋/API 연동 확장 가능
+    </div>
+  </div>
+
+  <div class="toast" id="toast">복사 완료</div>
+
+  <script>
+    const options = {
+      designType: [
+        '카드뉴스', '유튜브 썸네일', '온라인 쇼핑 상세페이지', '광고 배너', '인스타그램 포스트'
+      ],
+      platform: ['Instagram', 'YouTube', 'Smart Store', 'Coupang', 'Meta Ads', 'Blog', 'General'],
+      styleTone: ['프리미엄 미니멀', '트렌디 감성', '강한 판매형', '에디토리얼', '럭셔리', '귀여운 캐주얼', '테크 모던'],
+      brandMood: ['신뢰감', '고급스러움', '발랄함', '전문성', '따뜻함', '혁신적', '미니멀'],
+      colorMood: ['블랙 & 화이트', '파스텔', '비비드', '뉴트럴 베이지', '블루 계열', '그린 계열', '레드 포인트'],
+      layout: ['중앙 집중형', '좌우 분할형', '텍스트 오버레이형', '제품 강조형', '정보 카드형', '비대칭 잡지형'],
+      ratio: ['1:1', '4:5', '16:9', '9:16', '3:4'],
+      cta: ['지금 구매', '자세히 보기', '지금 신청', '할인 혜택 확인', '브랜드 인지도 강화', '저장하고 참고'],
+      engine: ['GPT Image / Gemini 계열', 'Midjourney 스타일', 'Stable Diffusion 계열', '공용 텍스트-투-이미지']
+    };
+
+    const templates = {
+      '카드뉴스': 'multiple editorial-style social media card slides, clear headline hierarchy, strong cover slide, modular information sections, readable Korean text area reserved',
+      '유튜브 썸네일': 'high-click youtube thumbnail composition, dominant focal point, bold headline area, emotional contrast, instant readability at small size',
+      '온라인 쇼핑 상세페이지': 'e-commerce product detail page visual, benefit-first information flow, product hero section, comparison/feature callouts, purchase-driving composition',
+      '광고 배너': 'high-conversion advertising banner, concise message hierarchy, strong CTA area, immediate brand recognition, polished commercial quality',
+      '인스타그램 포스트': 'instagram feed-friendly visual, stylish and shareable composition, modern brand tone, balanced text and image area, polished social-ready layout'
+    };
+
+    const copyStrategies = {
+      '카드뉴스': '첫 장은 시선을 끄는 훅 문장, 이후 장은 문제-해결-혜택 흐름으로 구성',
+      '유튜브 썸네일': '3~6단어 수준의 강한 훅 카피와 표정/대비를 강화',
+      '온라인 쇼핑 상세페이지': '문제 제기 → 핵심 효능 → 신뢰 요소 → 구매 유도 순서로 배치',
+      '광고 배너': '짧고 즉각적인 메시지와 명확한 CTA를 우선 배치',
+      '인스타그램 포스트': '브랜드 감도와 저장/공유 유도를 동시에 반영'
+    };
+
+    const el = id => document.getElementById(id);
+    const output = el('output');
+    const logicHint = el('logicHint');
+    const modeBadge = el('modeBadge');
+    let currentMode = 'detailed';
+    let lastDetailed = '';
+    let lastBrief = '';
+
+    function fillSelect(id, arr) {
+      const target = el(id);
+      target.innerHTML = arr.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
+    Object.entries(options).forEach(([id, arr]) => fillSelect(id, arr));
+
+    function getValues() {
+      return {
+        designType: el('designType').value,
+        platform: el('platform').value,
+        styleTone: el('styleTone').value,
+        target: el('target').value.trim(),
+        brandMood: el('brandMood').value,
+        colorMood: el('colorMood').value,
+        layout: el('layout').value,
+        ratio: el('ratio').value,
+        cta: el('cta').value,
+        engine: el('engine').value,
+        topic: el('topic').value.trim(),
+        headline: el('headline').value.trim(),
+        mustInclude: el('mustInclude').value.trim(),
+        avoid: el('avoid').value.trim()
+      };
+    }
+
+    function sentence(v, fallback) {
+      return v && v.length ? v : fallback;
+    }
+
+    function buildDetailed(data) {
+      const audience = sentence(data.target, 'broad online consumers');
+      const topic = sentence(data.topic, 'a brand campaign or product offering');
+      const headline = sentence(data.headline, 'deliver a clear and persuasive visual message');
+      const mustInclude = sentence(data.mustInclude, 'clean headline area, strong visual hierarchy, and enough negative space for readable Korean text');
+      const avoid = sentence(data.avoid, 'cluttered layout, awkward typography, low-quality stock feeling, excessive visual noise');
+
+      return `Create a ${data.designType} for ${data.platform}. The subject is ${topic}. The key message is "${headline}". Use a ${data.styleTone} visual direction with a ${data.brandMood} brand feeling, ${data.colorMood} palette, and ${data.layout} composition. The target audience is ${audience}. The design should feel commercially polished, premium, and highly usable in real marketing.
+
+Visual requirements:
+- ${templates[data.designType]}
+- maintain a ${data.ratio} aspect ratio
+- prioritize clear hierarchy, clean spacing, and strong focal point
+- include: ${mustInclude}
+- CTA intent: ${data.cta}
+- optimize for ${data.engine}
+
+Design guidance:
+- create a refined, modern layout with realistic commercial design quality
+- reserve clean areas for Korean headline/subheadline text placement
+- use strong contrast and polished lighting/details where appropriate
+- ensure the final output looks like a professionally art-directed marketing asset
+
+Avoid:
+- ${avoid}
+
+Output goal:
+A high-quality ${data.designType} that can be used as a strong reference or direct generation prompt for production-ready marketing design.`;
+    }
+
+    function buildBrief(data) {
+      const topic = sentence(data.topic, 'campaign');
+      const headline = sentence(data.headline, 'clear core message');
+      return `${data.designType}, ${topic}, ${headline}, ${data.styleTone}, ${data.brandMood}, ${data.colorMood}, ${data.layout}, ${data.ratio}, target ${sentence(data.target, 'general audience')}, include ${sentence(data.mustInclude, 'clean text area and strong hierarchy')}, avoid ${sentence(data.avoid, 'clutter and cheap stock 느낌')}, polished commercial marketing design`;
+    }
+
+    function render(mode = currentMode) {
+      const data = getValues();
+      lastDetailed = buildDetailed(data);
+      lastBrief = buildBrief(data);
+      logicHint.textContent = `${data.designType} 유형은 “${copyStrategies[data.designType]}” 규칙을 기준으로 프롬프트가 구성됩니다.`;
+      currentMode = mode;
+      modeBadge.textContent = mode === 'detailed' ? '상세 버전' : '짧은 버전';
+      output.textContent = mode === 'detailed' ? lastDetailed : lastBrief;
+      localStorage.setItem('promptcanvas-state', JSON.stringify(data));
+    }
+
+    function resetForm() {
+      ['target','topic','headline','mustInclude','avoid'].forEach(id => el(id).value = '');
+      ['designType','platform','styleTone','brandMood','colorMood','layout','ratio','cta','engine'].forEach((id, idx) => el(id).selectedIndex = 0);
+      output.textContent = '왼쪽 옵션을 선택한 뒤 “프롬프트 생성”을 누르면 이곳에 결과가 표시됩니다.';
+      modeBadge.textContent = '복사해서 바로 사용 가능';
+      logicHint.textContent = '디자인 유형에 따라 카피 구조, 레이아웃 지시, 텍스트 영역 확보 지시문이 자동 반영됩니다.';
+      localStorage.removeItem('promptcanvas-state');
+    }
+
+    function randomize() {
+      for (const [id, arr] of Object.entries(options)) {
+        el(id).selectedIndex = Math.floor(Math.random() * arr.length);
+      }
+      const samples = {
+        target: ['20~30대 여성 직장인', '온라인 창업자', '초보 부모', '자기계발 관심층', '뷰티 소비자'],
+        topic: ['여름 시즌 세일', '신제품 런칭', 'AI 클래스 모집', '건강기능식품 프로모션', '브랜드 리뉴얼 캠페인'],
+        headline: ['단 7일 한정 혜택', '지금 가장 필요한 핵심 기능', '판매를 만드는 첫 인상', '한 번에 이해되는 강력한 메시지', '전환율을 높이는 프리미엄 비주얼'],
+        mustInclude: ['브랜드 로고, 핵심 혜택 배지, 제품 정면컷, 가격 강조 영역', '전후 비교 포인트, 한글 헤드라인 공간, CTA 버튼 영역', '모바일 가독성 높은 텍스트 블록, 포인트 컬러 CTA'],
+        avoid: ['너무 복잡한 배경, 난잡한 아이콘, 저해상도 느낌', '과한 그라데이션, 불필요한 장식, 촌스러운 폰트 분위기', '텍스트 과밀, 시선 분산 요소, 올드한 광고 느낌']
+      };
+      Object.entries(samples).forEach(([id, arr]) => {
+        el(id).value = arr[Math.floor(Math.random() * arr.length)];
+      });
+      render('detailed');
+    }
+
+    async function copyText() {
+      const text = output.textContent.trim();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        const toast = el('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1600);
+      } catch (e) {
+        alert('복사에 실패했습니다. 브라우저 권한을 확인해주세요.');
+      }
+    }
+
+    el('generateBtn').addEventListener('click', () => render('detailed'));
+    el('briefBtn').addEventListener('click', () => {
+      if (!lastBrief) render('brief'); else { currentMode = 'brief'; modeBadge.textContent = '짧은 버전'; output.textContent = lastBrief; }
+    });
+    el('detailBtn').addEventListener('click', () => {
+      if (!lastDetailed) render('detailed'); else { currentMode = 'detailed'; modeBadge.textContent = '상세 버전'; output.textContent = lastDetailed; }
+    });
+    el('copyBtn').addEventListener('click', copyText);
+    el('randomBtn').addEventListener('click', randomize);
+    el('resetBtn').addEventListener('click', resetForm);
+    el('designType').addEventListener('change', () => {
+      const t = el('designType').value;
+      logicHint.textContent = `${t} 유형은 “${copyStrategies[t]}” 규칙을 기준으로 프롬프트가 구성됩니다.`;
+    });
+
+    (function restore() {
+      const saved = localStorage.getItem('promptcanvas-state');
+      if (!saved) return;
+      try {
+        const data = JSON.parse(saved);
+        Object.keys(data).forEach(key => {
+          if (el(key)) el(key).value = data[key];
+        });
+        render('detailed');
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>

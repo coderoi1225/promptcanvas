@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디자인 프롬프트 빌더</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0A0A0F;
+    --surface: #13131A;
+    --surface2: #1C1C28;
+    --border: #2A2A3A;
+    --border-light: #3A3A50;
+    --accent: #7C5CFC;
+    --accent2: #A78BFA;
+    --accent-glow: rgba(124, 92, 252, 0.3);
+    --text: #F0EFFF;
+    --text-muted: #8888AA;
+    --text-dim: #5555775;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --pink: #F472B6;
+    --cyan: #22D3EE;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(16px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--accent-glow);
+    color: var(--accent2);
+    border: 1px solid rgba(124,92,252,0.3);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .app-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 73px);
+  }
+
+  /* ── LEFT PANEL ── */
+  .panel-left {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: calc(100vh - 73px);
+    position: sticky;
+    top: 73px;
+  }
+
+  .panel-left::-webkit-scrollbar { width: 4px; }
+  .panel-left::-webkit-scrollbar-track { background: transparent; }
+  .panel-left::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+  /* ── RIGHT PANEL ── */
+  .panel-right {
+    overflow-y: auto;
+    max-height: calc(100vh - 73px);
+    background: var(--surface);
+  }
+
+  /* ── SECTION BLOCKS ── */
+  .section-block {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── TYPE CARDS ── */
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .type-card {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
+    user-select: none;
+  }
+
+  .type-card:hover {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.06);
+    transform: translateY(-1px);
+  }
+
+  .type-card.active {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.12);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .type-emoji { font-size: 22px; display: block; margin-bottom: 6px; }
+
+  .type-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .type-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* ── OPTION GROUPS ── */
+  .option-group {
+    margin-bottom: 20px;
+  }
+
+  .option-group-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .tag:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .tag.selected {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.15);
+    color: var(--accent2);
+  }
+
+  /* 컬러 태그 */
+  .tag.mood-energetic.selected { border-color: #F472B6; background: rgba(244,114,182,0.15); color: #F9A8D4; }
+  .tag.mood-calm.selected { border-color: #22D3EE; background: rgba(34,211,238,0.15); color: #67E8F9; }
+  .tag.mood-warm.selected { border-color: #FBBF24; background: rgba(251,191,36,0.15); color: #FDE68A; }
+  .tag.mood-clean.selected { border-color: #34D399; background: rgba(52,211,153,0.15); color: #6EE7B7; }
+  .tag.mood-luxury.selected { border-color: #C4B5FD; background: rgba(196,181,253,0.15); color: #DDD6FE; }
+  .tag.mood-dark.selected { border-color: #F87171; background: rgba(248,113,113,0.15); color: #FCA5A5; }
+
+  /* ── TOOL SELECTOR ── */
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .tool-btn {
+    padding: 10px 8px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    user-select: none;
+  }
+
+  .tool-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .tool-btn.active {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.15);
+    color: var(--accent2);
+  }
+
+  /* ── TEXT INPUTS ── */
+  .input-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    transition: border-color 0.15s;
+    resize: none;
+    outline: none;
+  }
+
+  .input-field:focus { border-color: var(--accent); }
+  .input-field::placeholder { color: var(--text-muted); }
+
+  /* ── RIGHT PANEL CONTENT ── */
+  .prompt-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .prompt-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--text), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .prompt-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── PROMPT BOX ── */
+  .prompt-area {
+    padding: 24px 32px;
+  }
+
+  .prompt-lang-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .lang-tab {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .lang-tab.active {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.15);
+    color: var(--accent2);
+  }
+
+  .prompt-box {
+    background: #0F0F18;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--text);
+    min-height: 180px;
+    position: relative;
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .prompt-box .highlight-type { color: var(--accent2); font-weight: 600; }
+  .prompt-box .highlight-mood { color: #F472B6; }
+  .prompt-box .highlight-color { color: #FBBF24; }
+  .prompt-box .highlight-layout { color: #22D3EE; }
+  .prompt-box .highlight-text { color: #34D399; }
+  .prompt-box .highlight-extra { color: #C4B5FD; }
+  .prompt-box .highlight-ratio { color: #F87171; }
+
+  .prompt-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .prompt-empty-icon { font-size: 40px; opacity: 0.4; }
+
+  /* ── COPY BUTTON ── */
+  .btn-copy {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--accent), #9B6BFF);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    box-shadow: 0 4px 20px rgba(124,92,252,0.4);
+  }
+
+  .btn-copy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(124,92,252,0.5);
+  }
+
+  .btn-copy:active { transform: translateY(0); }
+
+  .btn-copy.copied {
+    background: linear-gradient(135deg, #059669, #10B981);
+    box-shadow: 0 4px 20px rgba(52,211,153,0.4);
+  }
+
+  /* ── BREAKDOWN CARDS ── */
+  .breakdown-section {
+    padding: 0 32px 32px;
+  }
+
+  .breakdown-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .breakdown-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+
+  .breakdown-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .breakdown-card-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── TIPS ── */
+  .tips-section {
+    padding: 0 32px 32px;
+  }
+
+  .tip-card {
+    background: rgba(124,92,252,0.06);
+    border: 1px solid rgba(124,92,252,0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .tip-icon { font-size: 18px; flex-shrink: 0; }
+
+  .tip-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  .tip-text strong { color: var(--accent2); }
+
+  /* ── RATIO VISUAL ── */
+  .ratio-preview {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ratio-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .ratio-item:hover { border-color: var(--accent2); }
+  .ratio-item.selected { border-color: var(--accent); background: rgba(124,92,252,0.12); }
+
+  .ratio-box {
+    background: var(--border-light);
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .ratio-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .ratio-item.selected .ratio-label { color: var(--accent2); }
+
+  /* ── GENERATE BTN ── */
+  .generate-btn {
+    width: calc(100% - 48px);
+    margin: 0 24px 24px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 24px rgba(124,92,252,0.3);
+    position: sticky;
+    bottom: 0;
+  }
+
+  .generate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(124,92,252,0.45);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  /* ── SCROLLBAR (right) ── */
+  .panel-right::-webkit-scrollbar { width: 4px; }
+  .panel-right::-webkit-scrollbar-track { background: transparent; }
+  .panel-right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── ANIMATE ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fadeIn 0.25s ease forwards; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .pulse { animation: pulse 1.5s ease infinite; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .app-grid { grid-template-columns: 1fr; }
+    .panel-left { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+    .panel-right { max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">✦</div>
+    디자인 프롬프트 빌더
+  </div>
+  <span class="badge">BETA v1.0</span>
+</header>
+
+<div class="app-grid">
+
+  <!-- ───────── LEFT PANEL ───────── -->
+  <aside class="panel-left">
+
+    <!-- 디자인 유형 -->
+    <div class="section-block">
+      <div class="section-label">디자인 유형</div>
+      <div class="type-grid" id="typeGrid">
+        <div class="type-card active" data-type="카드뉴스" onclick="selectType(this)">
+          <span class="type-emoji">📋</span>
+          <div class="type-name">카드뉴스</div>
+          <div class="type-desc">SNS 인포그래픽</div>
+        </div>
+        <div class="type-card" data-type="유튜브 썸네일" onclick="selectType(this)">
+          <span class="type-emoji">▶️</span>
+          <div class="type-name">유튜브 썸네일</div>
+          <div class="type-desc">클릭 유도 이미지</div>
+        </div>
+        <div class="type-card" data-type="온라인 쇼핑 상세페이지" onclick="selectType(this)">
+          <span class="type-emoji">🛍️</span>
+          <div class="type-name">상세페이지</div>
+          <div class="type-desc">온라인 쇼핑몰</div>
+        </div>
+        <div class="type-card" data-type="인스타그램 피드" onclick="selectType(this)">
+          <span class="type-emoji">📸</span>
+          <div class="type-name">인스타 피드</div>
+          <div class="type-desc">정방형/세로형</div>
+        </div>
+        <div class="type-card" data-type="배너 광고" onclick="selectType(this)">
+          <span class="type-emoji">📢</span>
+          <div class="type-name">배너 광고</div>
+          <div class="type-desc">웹/앱 광고</div>
+        </div>
+        <div class="type-card" data-type="브로셔 표지" onclick="selectType(this)">
+          <span class="type-emoji">📄</span>
+          <div class="type-name">브로셔/표지</div>
+          <div class="type-desc">출판·인쇄물</div>
+        </div>
+        <div class="type-card" data-type="프레젠테이션 슬라이드" onclick="selectType(this)">
+          <span class="type-emoji">🖥️</span>
+          <div class="type-name">프레젠테이션</div>
+          <div class="type-desc">발표 슬라이드</div>
+        </div>
+        <div class="type-card" data-type="로고 디자인" onclick="selectType(this)">
+          <span class="type-emoji">✦</span>
+          <div class="type-name">로고</div>
+          <div class="type-desc">브랜드 심볼</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 분위기 -->
+    <div class="section-block">
+      <div class="section-label">분위기 & 톤</div>
+      <div class="option-group">
+        <div class="tag-row" id="moodGroup">
+          <div class="tag mood-energetic" data-group="mood" onclick="toggleTag(this)">⚡ 활기차고 강렬</div>
+          <div class="tag mood-calm" data-group="mood" onclick="toggleTag(this)">🌊 차분하고 안정</div>
+          <div class="tag mood-warm" data-group="mood" onclick="toggleTag(this)">☀️ 따뜻하고 감성적</div>
+          <div class="tag mood-clean" data-group="mood" onclick="toggleTag(this)">🍃 깔끔하고 미니멀</div>
+          <div class="tag mood-luxury" data-group="mood" onclick="toggleTag(this)">💎 고급스럽고 세련</div>
+          <div class="tag mood-dark" data-group="mood" onclick="toggleTag(this)">🌑 다크하고 강렬</div>
+          <div class="tag" data-group="mood" onclick="toggleTag(this)">🌸 귀엽고 친근</div>
+          <div class="tag" data-group="mood" onclick="toggleTag(this)">🚀 미래적·테크</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 컬러 팔레트 -->
+    <div class="section-block">
+      <div class="section-label">컬러 팔레트</div>
+      <div class="tag-row" id="colorGroup">
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🔵 블루 계열</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🟣 퍼플 계열</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🟠 오렌지/레드</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🟢 그린 계열</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">⬛ 블랙 & 화이트</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🌈 그라데이션</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🤍 파스텔 톤</div>
+        <div class="tag" data-group="color" onclick="toggleTag(this)">🟡 골드 & 베이지</div>
+      </div>
+    </div>
+
+    <!-- 레이아웃 스타일 -->
+    <div class="section-block">
+      <div class="section-label">레이아웃 스타일</div>
+      <div class="tag-row" id="layoutGroup">
+        <div class="tag" data-group="layout" onclick="toggleTag(this)">📐 중앙 집중형</div>
+        <div class="tag" data-group="layout" onclick="toggleTag(this)">⬛ 좌측 정렬형</div>
+        <div class="tag" data-group="layout" onclick="toggleTag(this)">🔲 그리드 분할형</div>
+        <div class="tag" data-group="layout" onclick="toggleTag(this)">🌀 다이나믹 레이아웃</div>
+        <div class="tag" data-group="layout" onclick="toggleTag(this)">📱 풀블리드 이미지</div>
+        <div class="tag" data-group="layout" onclick="toggleTag(this)">🗂️ 카드 스택형</div>
+      </div>
+    </div>
+
+    <!-- 텍스트 스타일 -->
+    <div class="section-block">
+      <div class="section-label">텍스트 & 폰트 스타일</div>
+      <div class="tag-row" id="textGroup">
+        <div class="tag" data-group="text" onclick="toggleTag(this)">🅱️ 굵은 헤드라인</div>
+        <div class="tag" data-group="text" onclick="toggleTag(this)">✍️ 손글씨 스타일</div>
+        <div class="tag" data-group="text" onclick="toggleTag(this)">🔡 산세리프 클린</div>
+        <div class="tag" data-group="text" onclick="toggleTag(this)">📰 세리프 클래식</div>
+        <div class="tag" data-group="text" onclick="toggleTag(this)">🔢 숫자 강조형</div>
+        <div class="tag" data-group="text" onclick="toggleTag(this)">💬 텍스트 미니멀</div>
+      </div>
+    </div>
+
+    <!-- 비율 선택 -->
+    <div class="section-block">
+      <div class="section-label">비율 / 사이즈</div>
+      <div class="ratio-preview" id="ratioGroup">
+        <div class="ratio-item selected" data-ratio="1:1 (정방형)" onclick="selectRatio(this)">
+          <div class="ratio-box" style="width:36px;height:36px;"></div>
+          <span class="ratio-label">1:1</span>
+        </div>
+        <div class="ratio-item" data-ratio="4:5 (세로형)" onclick="selectRatio(this)">
+          <div class="ratio-box" style="width:32px;height:40px;"></div>
+          <span class="ratio-label">4:5</span>
+        </div>
+        <div class="ratio-item" data-ratio="9:16 (스토리형)" onclick="selectRatio(this)">
+          <div class="ratio-box" style="width:22px;height:40px;"></div>
+          <span class="ratio-label">9:16</span>
+        </div>
+        <div class="ratio-item" data-ratio="16:9 (와이드)" onclick="selectRatio(this)">
+          <div class="ratio-box" style="width:44px;height:26px;"></div>
+          <span class="ratio-label">16:9</span>
+        </div>
+        <div class="ratio-item" data-ratio="A4 세로 (297x210mm)" onclick="selectRatio(this)">
+          <div class="ratio-box" style="width:28px;height:40px;"></div>
+          <span class="ratio-label">A4</span>
+        </div>
+        <div class="ratio-item" data-ratio="2:1 (배너형)" onclick="selectRatio(this)">
+          <div class="ratio-box" style="width:44px;height:22px;"></div>
+          <span class="ratio-label">2:1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 추가 옵션 -->
+    <div class="section-block">
+      <div class="section-label">추가 요소</div>
+      <div class="tag-row" id="extraGroup">
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">✨ 반짝이 효과</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">📍 아이콘 포함</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">🖼️ 실사 이미지</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">🎨 일러스트</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">🌿 자연/식물</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">📊 인포그래픽</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">👤 인물 사진</div>
+        <div class="tag" data-group="extra" onclick="toggleTag(this)">🏷️ CTA 버튼</div>
+      </div>
+    </div>
+
+    <!-- 키워드/주제 -->
+    <div class="section-block">
+      <div class="section-label">키워드 / 주제 (선택)</div>
+      <textarea
+        class="input-field"
+        id="keywordInput"
+        rows="3"
+        placeholder="예: 어린이 영어교육, 다이어트 식품, IT 스타트업 IR..."
+        oninput="generatePrompt()"
+      ></textarea>
+    </div>
+
+    <!-- 사용 툴 -->
+    <div class="section-block">
+      <div class="section-label">사용할 AI 도구</div>
+      <div class="tool-grid" id="toolGroup">
+        <div class="tool-btn active" data-tool="Claude" onclick="selectTool(this)">Claude</div>
+        <div class="tool-btn" data-tool="Midjourney" onclick="selectTool(this)">Midjourney</div>
+        <div class="tool-btn" data-tool="Canva AI" onclick="selectTool(this)">Canva AI</div>
+        <div class="tool-btn" data-tool="DALL-E 3" onclick="selectTool(this)">DALL-E 3</div>
+        <div class="tool-btn" data-tool="Ideogram" onclick="selectTool(this)">Ideogram</div>
+        <div class="tool-btn" data-tool="Adobe Firefly" onclick="selectTool(this)">Firefly</div>
+      </div>
+    </div>
+
+    <button class="generate-btn" onclick="generatePrompt()">
+      ✦ 프롬프트 생성하기
+    </button>
+
+  </aside>
+
+  <!-- ───────── RIGHT PANEL ───────── -->
+  <main class="panel-right">
+
+    <div class="prompt-header">
+      <div>
+        <div class="prompt-title" id="promptTitle">카드뉴스 프롬프트</div>
+        <div class="prompt-subtitle" id="promptSubtitle">왼쪽에서 옵션을 선택하면 맞춤 프롬프트가 생성됩니다</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+        <button class="btn-copy" id="copyBtn" onclick="copyPrompt()">
+          📋 복사하기
+        </button>
+      </div>
+    </div>
+
+    <!-- 언어 탭 -->
+    <div class="prompt-area">
+      <div class="prompt-lang-tabs">
+        <button class="lang-tab active" onclick="switchLang('ko', this)">🇰🇷 한국어</button>
+        <button class="lang-tab" onclick="switchLang('en', this)">🇺🇸 English</button>
+      </div>
+
+      <div class="prompt-box fade-in" id="promptBox">
+        <div class="prompt-empty">
+          <span class="prompt-empty-icon">✦</span>
+          <div>
+            왼쪽에서 <strong>디자인 유형</strong>을 선택하고<br>
+            원하는 옵션을 조합해보세요
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 브레이크다운 -->
+    <div class="breakdown-section" id="breakdownSection" style="display:none;">
+      <div class="breakdown-title">📌 선택된 옵션 요약</div>
+      <div class="breakdown-grid" id="breakdownGrid"></div>
+    </div>
+
+    <!-- 팁 -->
+    <div class="tips-section" id="tipSection" style="display:none;">
+      <div class="tip-card" id="tipCard">
+        <span class="tip-icon">💡</span>
+        <div class="tip-text" id="tipText"></div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+// ── STATE ──
+const state = {
+  type: '카드뉴스',
+  mood: [],
+  color: [],
+  layout: [],
+  text: [],
+  extra: [],
+  ratio: '1:1 (정방형)',
+  keyword: '',
+  tool: 'Claude',
+  lang: 'ko'
+};
+
+// ── SELECT TYPE ──
+function selectType(el) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.type = el.dataset.type;
+  generatePrompt();
+}
+
+// ── TOGGLE TAG (multi-select) ──
+function toggleTag(el) {
+  const group = el.dataset.group;
+  el.classList.toggle('selected');
+
+  const key = group;
+  const val = el.textContent.trim();
+
+  if (el.classList.contains('selected')) {
+    if (!state[key].includes(val)) state[key].push(val);
+  } else {
+    state[key] = state[key].filter(v => v !== val);
+  }
+  generatePrompt();
+}
+
+// ── SELECT RATIO ──
+function selectRatio(el) {
+  document.querySelectorAll('.ratio-item').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  state.ratio = el.dataset.ratio;
+  generatePrompt();
+}
+
+// ── SELECT TOOL ──
+function selectTool(el) {
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  state.tool = el.dataset.tool;
+  generatePrompt();
+}
+
+// ── SWITCH LANG ──
+function switchLang(lang, el) {
+  state.lang = lang;
+  document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  generatePrompt();
+}
+
+// ── GENERATE PROMPT ──
+function generatePrompt() {
+  state.keyword = document.getElementById('keywordInput').value.trim();
+
+  const {type, mood, color, layout, text, extra, ratio, keyword, tool, lang} = state;
+
+  // 유형별 기본 설명
+  const typeMap = {
+    '카드뉴스': {
+      ko: '소셜미디어 카드뉴스 디자인', en: 'social media card news design',
+      goal: '스크롤하는 사람의 시선을 멈추게 하고, 핵심 메시지 하나를 한눈에 전달한다.',
+      goalEn: 'Stop the scroll and deliver one core message at a glance.',
+      principles: ['한 장에는 핵심 메시지 하나만 담는다 (정보 과다 금지)', '시선 흐름은 위에서 아래로, 헤드라인을 가장 크고 강하게', '작은 모바일 화면에서도 또렷하게 읽히는 글자 크기'],
+      principlesEn: ['One core message per card (avoid clutter)', 'Top-to-bottom reading flow; make the headline largest and boldest', 'Text large enough to read on a small mobile screen'],
+    },
+    '유튜브 썸네일': {
+      ko: '유튜브 썸네일 이미지', en: 'YouTube thumbnail image',
+      goal: '피드에서 클릭을 유도한다 (클릭률 최우선).',
+      goalEn: 'Drive clicks in the feed (CTR first).',
+      principles: ['짧고 강한 텍스트 (3~5단어)로 한눈에 읽히게', '고대비 색과 큰 표정/비주얼로 시선 강탈', '작게 줄여도 메시지가 살아있게'],
+      principlesEn: ['Short, punchy text (3–5 words)', 'High contrast and a bold focal visual to grab attention', 'Stays legible when scaled down small'],
+    },
+    '온라인 쇼핑 상세페이지': {
+      ko: '온라인 쇼핑몰 상세페이지 배너 이미지', en: 'e-commerce product detail page banner',
+      goal: '제품의 매력을 전해 구매 전환으로 이어지게 한다.',
+      goalEn: 'Communicate product value and drive purchase conversion.',
+      principles: ['제품의 핵심 베네핏을 가장 먼저, 크게', '신뢰 요소(후기·보장·수치)와 명확한 CTA', '정보 위계: 큰 메시지 → 근거 → 행동 유도'],
+      principlesEn: ['Lead with the key product benefit, large', 'Trust signals (reviews, guarantees, numbers) and a clear CTA', 'Hierarchy: big message → supporting evidence → call to action'],
+    },
+    '인스타그램 피드': {
+      ko: '인스타그램 피드 포스트 이미지', en: 'Instagram feed post image',
+      goal: '브랜드 톤을 살리며 저장·공유하고 싶게 만든다.',
+      goalEn: 'Express brand tone and make people want to save/share.',
+      principles: ['일관된 톤앤매너와 여백 활용', '감성과 정보의 균형', '정방형/세로형에서 안정적인 구도'],
+      principlesEn: ['Consistent tone and generous whitespace', 'Balance of emotion and information', 'Stable composition for square/portrait'],
+    },
+    '배너 광고': {
+      ko: '웹 배너 광고 이미지', en: 'web banner advertisement',
+      goal: '한눈에 메시지를 전달하고 클릭을 유도한다.',
+      goalEn: 'Deliver the message instantly and drive clicks.',
+      principles: ['한 문장 핵심 메시지 + 눈에 띄는 CTA 버튼', '브랜드 로고/컬러로 식별성 확보', '좁은 공간에서도 읽히는 간결함'],
+      principlesEn: ['One-line core message + a prominent CTA button', 'Brand logo/color for recognition', 'Concise enough to read in a small space'],
+    },
+    '브로셔 표지': {
+      ko: '브로셔 표지 디자인', en: 'brochure cover design',
+      goal: '브랜드의 첫인상과 신뢰감을 만든다.',
+      goalEn: 'Create a strong first impression and sense of trust.',
+      principles: ['절제된 레이아웃과 분명한 타이틀 위계', '고급스러운 여백과 정렬', '인쇄를 고려한 안정적인 색·대비'],
+      principlesEn: ['Restrained layout with clear title hierarchy', 'Elegant whitespace and alignment', 'Print-safe colors and contrast'],
+    },
+    '프레젠테이션 슬라이드': {
+      ko: '프레젠테이션 슬라이드 디자인', en: 'presentation slide design',
+      goal: '발표 메시지를 한눈에 이해시킨다.',
+      goalEn: 'Make the talking point instantly understandable.',
+      principles: ['한 슬라이드에 한 메시지', '큰 폰트와 군더더기 없는 레이아웃', '멀리서도 읽히는 대비'],
+      principlesEn: ['One message per slide', 'Large fonts, uncluttered layout', 'Contrast readable from a distance'],
+    },
+    '로고 디자인': {
+      ko: '로고 디자인', en: 'logo design',
+      goal: '기억하기 쉽고 어디서나 통하는 브랜드 심볼을 만든다.',
+      goalEn: 'Create a memorable, versatile brand symbol.',
+      principles: ['단순하고 기억에 남는 형태', '확대/축소에도 또렷하게', '흑백으로도 작동하는 형태'],
+      principlesEn: ['Simple and memorable form', 'Crisp at any size', 'Works in black and white'],
+    },
+  };
+
+  const typeName = typeMap[type]?.[lang] || type;
+
+  // 툴별 프롬프트 형식
+  if (lang === 'ko') {
+    const parts = [];
+
+    // ── Claude: 전용 구조화 디자인 브리프 ──
+    if (tool === 'Claude') {
+      const dir = [];
+      if (mood.length)   dir.push(`- 분위기/톤: ${mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (color.length)  dir.push(`- 컬러: ${color.map(c=>c.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (layout.length) dir.push(`- 레이아웃: ${layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (text.length)   dir.push(`- 타이포그래피: ${text.map(t=>t.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (extra.length)  dir.push(`- 추가 요소: ${extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (!dir.length)   dir.push('- (특별한 지정 없음 — 주제와 유형에 가장 잘 맞게 제안해주세요)');
+      const principles = (typeMap[type]?.principles || ['명확한 위계와 가독성을 최우선으로']).map(p=>`- ${p}`).join('\n');
+      parts.push(
+`당신은 10년차 시니어 그래픽 디자이너입니다. 아래 브리프를 바탕으로 실제 사용 가능한 수준의 ${typeName}을(를) 디자인해 주세요.
+
+# 1. 디자인 목적
+${typeMap[type]?.goal || '명확하고 완성도 높은 디자인을 전달한다.'}
+
+# 2. 제작 사양
+- 유형: ${typeName}
+- 비율/사이즈: ${ratio}
+- 주제: ${keyword || '(미입력 — 유형과 비주얼 방향에 맞는 그럴듯한 예시 콘텐츠를 직접 만들어 채워주세요)'}
+
+# 3. 콘텐츠 카피
+${keyword
+  ? `"${keyword}"에 어울리는 헤드라인과 보조 문구를 실제처럼 구체적으로 작성해 넣어주세요.`
+  : '이 유형에 어울리는 헤드라인과 보조 문구를 직접 만들어 넣어주세요.'}
+
+# 4. 비주얼 방향
+${dir.join('\n')}
+
+# 5. 이 유형에서 꼭 지킬 원칙
+${principles}
+
+# 6. 출력 형식
+- 하나의 자체 완결 HTML 파일로 만들고, CSS는 <style> 안에 인라인으로 포함.
+- 위 비율(${ratio})을 고정 캔버스로 정확히 맞춰주세요.
+- 모든 글자는 실제 텍스트로(이미지 아님), 한글이 깨지지 않게.
+- 바로 캡처해서 쓸 수 있는 완성도로 마감.
+- 결과는 아티팩트(artifact)로 보여주세요.`);
+      renderPrompt(parts.join(''), type, tool);
+      return;
+    }
+
+    // ── 이미지/기타 도구: 요약 브리프 + 도구별 지시 ──
+    parts.push(`[디자인 요청]\n\n`);
+    parts.push(`▸ 유형: ${typeName}\n`);
+    if (keyword) parts.push(`▸ 주제/키워드: ${keyword}\n`);
+    parts.push(`▸ 비율: ${ratio}\n`);
+    if (mood.length) parts.push(`▸ 분위기: ${mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ')}\n`);
+    if (color.length) parts.push(`▸ 컬러: ${color.map(c=>c.replace(/^[^\s]+ /,'')).join(', ')}\n`);
+    if (layout.length) parts.push(`▸ 레이아웃: ${layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ')}\n`);
+    if (text.length) parts.push(`▸ 텍스트 스타일: ${text.map(t=>t.replace(/^[^\s]+ /,'')).join(', ')}\n`);
+    if (extra.length) parts.push(`▸ 추가 요소: ${extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', ')}\n`);
+    parts.push(`\n[${tool} 지시사항]\n\n`);
+
+    if (tool === 'Midjourney') {
+      const mjParts = [];
+      if (keyword) mjParts.push(keyword);
+      mjParts.push(`${typeName}`);
+      if (mood.length) mjParts.push(mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ') + ' mood');
+      if (color.length) mjParts.push(color.map(c=>c.replace(/^[^\s]+ /,'')).join(' and ') + ' color palette');
+      if (layout.length) mjParts.push(layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ') + ' layout');
+      if (text.length) mjParts.push(text.map(t=>t.replace(/^[^\s]+ /,'')).join(', ') + ' typography');
+      if (extra.length) mjParts.push(extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', '));
+      mjParts.push('professional graphic design, high quality');
+
+      const ar = ratio.match(/(\d+):(\d+)/);
+      const arStr = ar ? `--ar ${ar[1]}:${ar[2]}` : '--ar 1:1';
+      parts.push(`/imagine ${mjParts.join(', ')} ${arStr} --v 6 --style raw`);
+    } else if (tool === 'Canva AI') {
+      parts.push(`Canva의 AI 기능에 다음 텍스트를 입력하세요:\n\n`);
+      parts.push(`"${typeName}를 만들어줘. `);
+      if (keyword) parts.push(`주제는 ${keyword}이고, `);
+      if (mood.length) parts.push(`${mood.map(m=>m.replace(/^[^\s]+ /,'')).join('+')} 분위기로, `);
+      if (color.length) parts.push(`${color.map(c=>c.replace(/^[^\s]+ /,'')).join('/')} 컬러를 메인으로, `);
+      if (layout.length) parts.push(`${layout.map(l=>l.replace(/^[^\s]+ /,'')).join('+')} 레이아웃으로, `);
+      parts.push(`${ratio} 비율로 만들어줘."`);
+    } else if (tool === 'DALL-E 3') {
+      const parts2 = [];
+      if (keyword) parts2.push(`Topic: ${keyword}`);
+      parts2.push(`Style: ${typeName}`);
+      if (mood.length) parts2.push(`Mood: ${mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (color.length) parts2.push(`Colors: ${color.map(c=>c.replace(/^[^\s]+ /,'')).join(' and ')}`);
+      if (layout.length) parts2.push(`Layout: ${layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (extra.length) parts2.push(`Elements: ${extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', ')}`);
+      parts2.push(`High quality professional graphic design, ${ratio} aspect ratio`);
+      parts.push(parts2.join('. ') + '.');
+    } else if (tool === 'Ideogram') {
+      const idParts = [];
+      if (keyword) idParts.push(keyword);
+      idParts.push(typeName);
+      if (mood.length) idParts.push(mood.map(m=>m.replace(/^[^\s]+ /,'')).join(' ') + ' style');
+      if (color.length) idParts.push(color.map(c=>c.replace(/^[^\s]+ /,'')).join(' ') + ' colors');
+      if (text.length) idParts.push(text.map(t=>t.replace(/^[^\s]+ /,'')).join(' ') + ' font');
+      idParts.push('clean design, professional, high resolution');
+      parts.push(idParts.join(', '));
+    } else if (tool === 'Adobe Firefly') {
+      const ffParts = [];
+      if (keyword) ffParts.push(keyword + ' themed');
+      ffParts.push(typeName);
+      if (mood.length) ffParts.push(mood.map(m=>m.replace(/^[^\s]+ /,'')).join(' and ') + ' atmosphere');
+      if (color.length) ffParts.push(color.map(c=>c.replace(/^[^\s]+ /,'')).join(' and ') + ' palette');
+      if (layout.length) ffParts.push(layout.map(l=>l.replace(/^[^\s]+ /,'')).join(' ') + ' composition');
+      ffParts.push('Adobe Firefly style, commercial use, vector elements, clean design');
+      parts.push(ffParts.join(', '));
+    }
+
+    renderPrompt(parts.join(''), type, tool);
+  } else {
+    // 영어 프롬프트
+    const typeName_en = typeMap[type]?.en || type;
+    const parts = [];
+
+    if (tool === 'Claude') {
+      const dir = [];
+      if (mood.length)   dir.push(`- Mood/Tone: ${mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (color.length)  dir.push(`- Color: ${color.map(c=>c.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (layout.length) dir.push(`- Layout: ${layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (text.length)   dir.push(`- Typography: ${text.map(t=>t.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (extra.length)  dir.push(`- Elements: ${extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', ')}`);
+      if (!dir.length)   dir.push('- (No specific direction — propose what best fits the topic and type)');
+      const principles = (typeMap[type]?.principlesEn || ['Prioritize clear hierarchy and readability']).map(p=>`- ${p}`).join('\n');
+      parts.push(
+`You are a senior graphic designer with 10+ years of experience. Using the brief below, design a production-ready ${typeName_en}.
+
+# 1. Goal
+${typeMap[type]?.goalEn || 'Deliver a clear, polished design.'}
+
+# 2. Specs
+- Type: ${typeName_en}
+- Aspect ratio: ${ratio}
+- Topic: ${keyword || '(none — invent plausible sample content that fits the type and visual direction)'}
+
+# 3. Copy
+${keyword
+  ? `Write concrete, realistic headline and supporting copy for "${keyword}".`
+  : 'Write a fitting headline and supporting copy for this type.'}
+
+# 4. Visual direction
+${dir.join('\n')}
+
+# 5. Principles to respect for this type
+${principles}
+
+# 6. Output
+- A single self-contained HTML file with all CSS inlined in <style>.
+- Match the aspect ratio (${ratio}) exactly as a fixed canvas.
+- All text as real text (not images).
+- Polished enough to screenshot and use as-is.
+- Show the result as an artifact.`);
+      renderPrompt(parts.join(''), type, tool);
+      return;
+    } else if (tool === 'Midjourney') {
+      const mjParts = [];
+      if (keyword) mjParts.push(keyword);
+      mjParts.push(`${typeName_en}`);
+      if (mood.length) mjParts.push(mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ') + ' mood');
+      if (color.length) mjParts.push(color.map(c=>c.replace(/^[^\s]+ /,'')).join(' and ') + ' color palette');
+      if (layout.length) mjParts.push(layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ') + ' layout');
+      if (extra.length) mjParts.push(extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', '));
+      mjParts.push('professional graphic design, high quality');
+      const ar = ratio.match(/(\d+):(\d+)/);
+      const arStr = ar ? `--ar ${ar[1]}:${ar[2]}` : '--ar 1:1';
+      parts.push(`/imagine ${mjParts.join(', ')} ${arStr} --v 6 --style raw`);
+    } else {
+      const genParts = [];
+      if (keyword) genParts.push(`${keyword} themed`);
+      genParts.push(`${typeName_en}`);
+      if (mood.length) genParts.push(mood.map(m=>m.replace(/^[^\s]+ /,'')).join(' and ') + ' mood');
+      if (color.length) genParts.push(color.map(c=>c.replace(/^[^\s]+ /,'')).join(' and ') + ' color scheme');
+      if (layout.length) genParts.push(layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ') + ' layout');
+      if (text.length) genParts.push(text.map(t=>t.replace(/^[^\s]+ /,'')).join(', ') + ' typography');
+      if (extra.length) genParts.push(extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', '));
+      genParts.push(`${ratio} aspect ratio, professional design, high quality`);
+      parts.push(genParts.join(', ') + '.');
+    }
+
+    renderPrompt(parts.join(''), type, tool);
+  }
+}
+
+function renderPrompt(text, type, tool) {
+  const box = document.getElementById('promptBox');
+
+  box.className = 'prompt-box fade-in';
+
+  // HTML 이스케이프 먼저 (프롬프트에 <style> 등이 들어가도 안전하게)
+  const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // 하이라이트 렌더링 (줄 단위)
+  let html = safe
+    .replace(/^#.*$/gm, m => `<span class="highlight-type">${m}</span>`)
+    .replace(/^▸ 유형:.*/gm, m => `<span class="highlight-type">${m}</span>`)
+    .replace(/^▸ 비율:.*/gm, m => `<span class="highlight-ratio">${m}</span>`)
+    .replace(/^▸ 분위기:.*/gm, m => `<span class="highlight-mood">${m}</span>`)
+    .replace(/^▸ 컬러:.*/gm, m => `<span class="highlight-color">${m}</span>`)
+    .replace(/^▸ 레이아웃:.*/gm, m => `<span class="highlight-layout">${m}</span>`)
+    .replace(/^▸ 텍스트 스타일:.*/gm, m => `<span class="highlight-text">${m}</span>`)
+    .replace(/^▸ 추가 요소:.*/gm, m => `<span class="highlight-extra">${m}</span>`)
+    .replace(/^▸ 주제.*:.*/gm, m => `<span class="highlight-type">${m}</span>`)
+    .replace(/^\/imagine.*/gm, m => `<span class="highlight-mood">${m}</span>`);
+
+  box.innerHTML = html;
+
+  // 제목 업데이트
+  document.getElementById('promptTitle').textContent = `${type} 프롬프트`;
+  document.getElementById('promptSubtitle').textContent = `${tool} 용 맞춤 프롬프트 · ${getSelectionCount()}개 옵션 선택됨`;
+
+  // 브레이크다운
+  showBreakdown();
+
+  // 팁
+  showTip(tool, type);
+}
+
+function getSelectionCount() {
+  const {mood, color, layout, text, extra} = state;
+  return mood.length + color.length + layout.length + text.length + extra.length;
+}
+
+function showBreakdown() {
+  const {type, mood, color, layout, text, extra, ratio, keyword, tool} = state;
+  const section = document.getElementById('breakdownSection');
+  const grid = document.getElementById('breakdownGrid');
+
+  const items = [
+    { label: '디자인 유형', value: type },
+    { label: '비율', value: ratio },
+    { label: 'AI 도구', value: tool },
+    { label: '분위기', value: mood.length ? mood.map(m=>m.replace(/^[^\s]+ /,'')).join(', ') : '미선택' },
+    { label: '컬러', value: color.length ? color.map(c=>c.replace(/^[^\s]+ /,'')).join(', ') : '미선택' },
+    { label: '레이아웃', value: layout.length ? layout.map(l=>l.replace(/^[^\s]+ /,'')).join(', ') : '미선택' },
+    { label: '텍스트', value: text.length ? text.map(t=>t.replace(/^[^\s]+ /,'')).join(', ') : '미선택' },
+    { label: '추가 요소', value: extra.length ? extra.map(e=>e.replace(/^[^\s]+ /,'')).join(', ') : '미선택' },
+  ];
+
+  if (keyword) items.push({ label: '키워드', value: keyword });
+
+  grid.innerHTML = items.map(item => `
+    <div class="breakdown-card">
+      <div class="breakdown-card-label">${item.label}</div>
+      <div class="breakdown-card-value">${item.value}</div>
+    </div>
+  `).join('');
+
+  section.style.display = 'block';
+}
+
+function showTip(tool, type) {
+  const tipSection = document.getElementById('tipSection');
+  const tipText = document.getElementById('tipText');
+
+  const tips = {
+    'Claude': `<strong>Claude 팁:</strong> 생성된 프롬프트를 Claude에게 붙여넣으면 HTML/CSS로 실제 디자인 코드를 만들어줍니다. "아티팩트로 보여줘"를 추가하면 더 편리합니다.`,
+    'Midjourney': `<strong>Midjourney 팁:</strong> Discord에서 /imagine 명령어 뒤에 바로 붙여넣기 하세요. <strong>--quality 2</strong>를 추가하면 더 높은 품질을 얻을 수 있습니다.`,
+    'Canva AI': `<strong>Canva AI 팁:</strong> Canva에서 '디자인 만들기' → 'Magic Design' 또는 'AI 이미지 생성'을 선택하고 프롬프트를 입력하세요.`,
+    'DALL-E 3': `<strong>DALL-E 3 팁:</strong> ChatGPT Plus에서 이미지 생성 모드를 켜고 프롬프트를 붙여넣으세요. 텍스트가 포함된 디자인에 특히 강합니다.`,
+    'Ideogram': `<strong>Ideogram 팁:</strong> ideogram.ai에서 프롬프트 입력 후 '텍스트 포함' 옵션을 활성화하면 로고나 카드뉴스 텍스트가 정확하게 생성됩니다.`,
+    'Adobe Firefly': `<strong>Adobe Firefly 팁:</strong> firefly.adobe.com 또는 Photoshop/Illustrator 내 생성형 AI 기능을 사용하세요. 상업용 라이선스가 자동 포함됩니다.`,
+  };
+
+  tipText.innerHTML = tips[tool] || `${tool}에 프롬프트를 붙여넣어 사용하세요.`;
+  tipSection.style.display = 'block';
+}
+
+// ── COPY ──
+function copyPrompt() {
+  const box = document.getElementById('promptBox');
+  const text = box.innerText;
+
+  if (!text || text.includes('왼쪽에서')) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ 복사됨!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 복사하기';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ── INIT ──
+generatePrompt();
+</script>
+</body>
+</html>

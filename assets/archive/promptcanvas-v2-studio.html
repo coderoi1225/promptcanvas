@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptCanvas Studio — 디자인 프롬프트 + 결과물 미리보기</title>
+  <style>
+    :root {
+      --bg1: #07111f;
+      --bg2: #0e1a31;
+      --panel: rgba(255,255,255,0.08);
+      --panel-2: rgba(255,255,255,0.05);
+      --line: rgba(255,255,255,0.12);
+      --text: #edf2ff;
+      --muted: #aeb8d8;
+      --brand: #7458ff;
+      --brand-2: #16d8d1;
+      --danger: #ff7587;
+      --good: #1ecf84;
+      --shadow: 0 24px 60px rgba(0,0,0,0.32);
+      --radius: 22px;
+      --card-radius: 26px;
+      --preview-a: linear-gradient(135deg, #7458ff, #9d89ff);
+      --preview-b: linear-gradient(135deg, #16d8d1, #7af0df);
+      --preview-c: linear-gradient(135deg, #ff8f5f, #ffc36b);
+      --preview-d: linear-gradient(135deg, #111827, #374151);
+      --preview-e: linear-gradient(135deg, #e8dcc8, #f8f1e6);
+      --preview-text-dark: #0d1324;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(116,88,255,0.28), transparent 24%),
+        radial-gradient(circle at top right, rgba(22,216,209,0.22), transparent 23%),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      min-height: 100vh;
+    }
+    .wrap {
+      width: min(1400px, calc(100vw - 28px));
+      margin: 18px auto 40px;
+    }
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      padding: 26px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      right: -100px;
+      top: -100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(22,216,209,0.2), transparent 65%);
+      pointer-events: none;
+    }
+    .hero-top {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.03;
+      letter-spacing: -0.03em;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+    .hero-badges, .quick-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .badge, .pill {
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      font-size: 13px;
+      color: var(--text);
+    }
+    .hero-stats {
+      display: grid;
+      gap: 12px;
+    }
+    .stat {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.05);
+    }
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .stat span {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .panel { padding: 20px; }
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+    .section-desc {
+      margin: -6px 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .preset-grid, .summary-grid, .preview-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .preset-grid { grid-template-columns: 1fr 1fr; }
+    .preset-btn {
+      text-align: left;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .preset-btn small {
+      display: block;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.55;
+      font-size: 12px;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    input, select, textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 13px 14px;
+      outline: none;
+      font-size: 14px;
+    }
+    textarea { resize: vertical; min-height: 86px; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(116,88,255,0.86);
+      box-shadow: 0 0 0 4px rgba(116,88,255,0.15);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .14s ease, opacity .14s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .primary {
+      background: linear-gradient(135deg, var(--brand), #9f8bff);
+      color: white;
+      flex: 1;
+      min-width: 155px;
+    }
+    .secondary {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+    .accent {
+      background: rgba(22,216,209,0.13);
+      border: 1px solid rgba(22,216,209,0.22);
+      color: #d9fffb;
+    }
+    .danger {
+      background: rgba(255,117,135,0.12);
+      border: 1px solid rgba(255,117,135,0.24);
+      color: #ffd6dc;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+    }
+    .output-box {
+      min-height: 260px;
+      background: rgba(4,8,18,0.62);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      white-space: pre-wrap;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .tag {
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(22,216,209,0.13);
+      border: 1px solid rgba(22,216,209,0.24);
+      color: #d5fffb;
+    }
+    .summary-grid {
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 14px;
+    }
+    .summary-item {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+    }
+    .summary-item strong {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .summary-item span {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+    .preview-stage {
+      display: grid;
+      gap: 12px;
+    }
+    .preview-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .preview-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .mock-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 300px;
+      border-radius: var(--card-radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.14);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      isolation: isolate;
+    }
+    .mock-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -30px -30px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      filter: blur(0px);
+      z-index: 0;
+    }
+    .mock-card .inner, .mock-card .footer-zone { position: relative; z-index: 1; }
+    .mock-dark { color: var(--text); }
+    .mock-light { color: var(--preview-text-dark); }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      opacity: 0.9;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .hero-copy {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+      word-break: keep-all;
+    }
+    .sub-copy {
+      font-size: 14px;
+      line-height: 1.65;
+      max-width: 90%;
+      opacity: 0.92;
+      word-break: keep-all;
+    }
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .chip {
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+    }
+    .footer-zone {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .cta-btn {
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.9);
+      color: #0b1220;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .price-box, .label-box {
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+    .mini-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .mini-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+    }
+    .mini-card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+    .mini-card p, .mini-card ul {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .mini-card ul { padding-left: 18px; }
+    .history-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .history-item {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+    .history-item strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .history-item span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 18px;
+      line-height: 1.7;
+    }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(30,207,132,0.96);
+      color: white;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: all .2s ease;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1200px) {
+      .layout, .workspace, .hero-top { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 860px) {
+      .field-grid, .preset-grid, .preview-grid, .summary-grid { grid-template-columns: 1fr; }
+      .wrap { width: min(100vw - 16px, 1400px); }
+      .hero, .panel { padding: 16px; }
+      .actions button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="glass hero">
+      <div class="hero-top">
+        <div>
+          <h1>PromptCanvas Studio<br>프롬프트만이 아니라<br>결과물 미리보기까지</h1>
+          <p>
+            이전 MVP를 한 단계 올려서, 이제는 사용자가 조합형 프롬프트를 만드는 것에서 끝나지 않고
+            실제 카드뉴스/썸네일/상세페이지 느낌의 결과물 미리보기를 바로 볼 수 있게 구성했습니다.
+            즉, 기획 → 프롬프트 생성 → 복사 → 시안 확인까지 한 화면에서 흐름이 이어집니다.
+          </p>
+          <div class="hero-badges">
+            <span class="badge">프롬프트 생성</span>
+            <span class="badge">실시간 결과물 미리보기</span>
+            <span class="badge">프리셋 저장</span>
+            <span class="badge">TXT 내보내기</span>
+            <span class="badge">브랜드 템플릿 확장 가능</span>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><strong>Studio V2</strong><span>실제 서비스 방향으로 확장한 프로토타입. 선택값이 프롬프트와 결과물 UI에 동시에 반영됩니다.</span></div>
+          <div class="stat"><strong>라이브 프리뷰</strong><span>카드뉴스, 썸네일, 배너, 상세페이지 느낌을 HTML 기반으로 즉시 시각화합니다.</span></div>
+          <div class="stat"><strong>다음 확장 가능</strong><span>원하면 이후 단계에서 실제 AI 이미지 생성 연결도 붙일 수 있습니다.</span></div>
+        </div>
+      </div>
+      <div class="quick-pills">
+        <span class="pill">카드뉴스</span>
+        <span class="pill">유튜브 썸네일</span>
+        <span class="pill">쇼핑 상세페이지</span>
+        <span class="pill">광고 배너</span>
+        <span class="pill">인스타 포스트</span>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="glass panel">
+        <h2 class="section-title">1. 템플릿 선택 + 조건 입력</h2>
+        <p class="section-desc">프리셋으로 시작하거나 직접 옵션을 조합해도 됩니다. 저장된 값은 브라우저에 유지됩니다.</p>
+
+        <div class="preset-grid" id="presetGrid"></div>
+
+        <div style="height:14px"></div>
+
+        <div class="field-grid">
+          <div class="field"><label for="designType">디자인 유형</label><select id="designType"></select></div>
+          <div class="field"><label for="platform">사용 채널</label><select id="platform"></select></div>
+          <div class="field"><label for="styleTone">스타일 톤</label><select id="styleTone"></select></div>
+          <div class="field"><label for="target">타깃 고객</label><input id="target" placeholder="예: 20~30대 여성 직장인" /></div>
+          <div class="field"><label for="brandMood">브랜드 무드</label><select id="brandMood"></select></div>
+          <div class="field"><label for="colorMood">컬러 무드</label><select id="colorMood"></select></div>
+          <div class="field"><label for="layoutType">레이아웃</label><select id="layoutType"></select></div>
+          <div class="field"><label for="ratio">비율</label><select id="ratio"></select></div>
+          <div class="field"><label for="cta">콜투액션</label><select id="cta"></select></div>
+          <div class="field"><label for="engine">권장 생성 스타일</label><select id="engine"></select></div>
+        </div>
+
+        <div class="field"><label for="topic">주제 / 상품 / 캠페인</label><input id="topic" placeholder="예: 여름 선케어 런칭, AI 마케팅 강의 모집" /></div>
+        <div class="field"><label for="headline">핵심 카피</label><input id="headline" placeholder="예: 백탁 없이 3초 흡수, 여름 피부를 가볍게" /></div>
+        <div class="field"><label for="subline">보조 메시지</label><input id="subline" placeholder="예: 끈적임 없는 텍스처, 데일리 선케어 루틴 완성" /></div>
+        <div class="field"><label for="mustInclude">반드시 포함할 요소</label><textarea id="mustInclude" placeholder="예: 제품 정면 컷, 혜택 배지, 가격 영역, CTA 버튼 위치"></textarea></div>
+        <div class="field"><label for="avoid">피하고 싶은 요소</label><textarea id="avoid" placeholder="예: 올드한 광고 느낌, 텍스트 과밀, 저가형 느낌"></textarea></div>
+
+        <div class="actions">
+          <button class="primary" id="generateBtn">프롬프트 + 결과물 생성</button>
+          <button class="secondary" id="randomBtn">추천 조합</button>
+          <button class="accent" id="saveBtn">프리셋 저장</button>
+          <button class="danger" id="resetBtn">초기화</button>
+        </div>
+
+        <div class="history-list" id="historyList"></div>
+      </div>
+
+      <div class="workspace">
+        <div class="glass panel">
+          <div class="meta-row">
+            <h2 class="section-title" style="margin:0;">2. 생성 프롬프트</h2>
+            <span class="tag" id="modeLabel">상세 프롬프트</span>
+          </div>
+          <div class="output-box" id="promptOutput">왼쪽에서 옵션을 입력한 뒤 “프롬프트 + 결과물 생성”을 눌러주세요.</div>
+          <div class="actions">
+            <button class="primary" id="copyBtn">프롬프트 복사</button>
+            <button class="secondary" id="shortBtn">짧은 버전</button>
+            <button class="secondary" id="longBtn">상세 버전</button>
+            <button class="accent" id="downloadBtn">TXT 저장</button>
+          </div>
+          <div class="summary-grid" id="summaryGrid"></div>
+        </div>
+
+        <div class="glass panel preview-stage">
+          <div class="preview-toolbar">
+            <div>
+              <h2 class="section-title" style="margin:0;">3. 결과물 미리보기</h2>
+              <p class="section-desc" style="margin-top:6px; margin-bottom:0;">AI 생성 연결 전 단계에서도 실제 화면 분위기를 확인할 수 있도록 규칙 기반 시안을 즉시 렌더링합니다.</p>
+            </div>
+            <span class="tag" id="previewStatus">라이브 프리뷰</span>
+          </div>
+          <div class="preview-grid" id="previewGrid"></div>
+          <div class="mini-stack">
+            <div class="mini-card">
+              <h3>지금 상태에서 가능한 실제 결과물</h3>
+              <ul>
+                <li>프롬프트 즉시 생성</li>
+                <li>시안형 카드/배너/썸네일 HTML 미리보기</li>
+                <li>저장/재호출 가능한 프리셋</li>
+                <li>프롬프트 TXT 내보내기</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>다음 단계</h3>
+              <p>원하면 다음 단계에서 실제 AI 이미지 생성 모델과 연결해 “프롬프트 → 이미지 결과물”까지 자동화할 수 있습니다. 그 단계는 추가 생성 시간이 들며 별도 실행이 필요합니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      PromptCanvas Studio V2 · 브라우저 실행형 실제 프로토타입 · 향후 React 전환, 사용자 계정, 결제, 이미지 생성 API 연동 가능
+    </div>
+  </div>
+
+  <div class="toast" id="toast">완료</div>
+
+  <script>
+    const options = {
+      designType: ['카드뉴스', '유튜브 썸네일', '온라인 쇼핑 상세페이지', '광고 배너', '인스타그램 포스트'],
+      platform: ['Instagram', 'YouTube', 'Smart Store', 'Coupang', 'Meta Ads', 'Blog', 'General'],
+      styleTone: ['프리미엄 미니멀', '트렌디 감성', '강한 판매형', '에디토리얼', '럭셔리', '귀여운 캐주얼', '테크 모던'],
+      brandMood: ['신뢰감', '고급스러움', '발랄함', '전문성', '따뜻함', '혁신적', '미니멀'],
+      colorMood: ['퍼플 네온', '민트 시안', '웜 오렌지', '블랙 모노', '뉴트럴 베이지'],
+      layoutType: ['중앙 집중형', '좌우 분할형', '텍스트 오버레이형', '제품 강조형', '정보 카드형', '비대칭 잡지형'],
+      ratio: ['1:1', '4:5', '16:9', '9:16', '3:4'],
+      cta: ['지금 구매', '자세히 보기', '지금 신청', '할인 혜택 확인', '브랜드 인지도 강화', '저장하고 참고'],
+      engine: ['GPT Image / Gemini 계열', 'Midjourney 스타일', 'Stable Diffusion 계열', '공용 텍스트-투-이미지']
+    };
+
+    const presets = [
+      {
+        name: '뷰티 카드뉴스',
+        desc: '브랜드 감도 높은 정보형 카드뉴스',
+        values: { designType:'카드뉴스', platform:'Instagram', styleTone:'프리미엄 미니멀', target:'20~30대 여성 직장인', brandMood:'고급스러움', colorMood:'뉴트럴 베이지', layoutType:'정보 카드형', ratio:'4:5', cta:'저장하고 참고', engine:'GPT Image / Gemini 계열', topic:'데일리 선케어 루틴', headline:'백탁 없는 데일리 선케어', subline:'매일 가볍게 바르는 산뜻한 자외선 케어', mustInclude:'제품 정면 컷, 핵심 효능 3개, 부드러운 베이지 배경, 한글 헤드라인 공간', avoid:'저가형 느낌, 복잡한 배경, 과한 3D 효과' }
+      },
+      {
+        name: '클릭형 썸네일',
+        desc: '강한 훅과 대비를 살린 유튜브 썸네일',
+        values: { designType:'유튜브 썸네일', platform:'YouTube', styleTone:'강한 판매형', target:'자기계발 관심층', brandMood:'혁신적', colorMood:'퍼플 네온', layoutType:'중앙 집중형', ratio:'16:9', cta:'자세히 보기', engine:'Midjourney 스타일', topic:'AI 마케팅 자동화 강의', headline:'매출을 바꾸는 AI 자동화', subline:'초보도 바로 적용 가능한 실전 워크플로우', mustInclude:'강한 헤드라인, 인물 강조 포인트, 배경 대비, 클릭 유도 요소', avoid:'텍스트 과밀, 밋밋한 배경, 정보 부족' }
+      },
+      {
+        name: '상세페이지 판매형',
+        desc: '혜택 중심 온라인 쇼핑 상세페이지',
+        values: { designType:'온라인 쇼핑 상세페이지', platform:'Smart Store', styleTone:'강한 판매형', target:'온라인 구매 전환 고객', brandMood:'신뢰감', colorMood:'민트 시안', layoutType:'제품 강조형', ratio:'3:4', cta:'지금 구매', engine:'GPT Image / Gemini 계열', topic:'프리미엄 멀티비타민', headline:'하루 한 포로 채우는 밸런스', subline:'간편하게 챙기는 12종 핵심 영양 설계', mustInclude:'제품 패키지, 가격 영역, 혜택 배지, 비교 포인트, CTA 버튼 느낌', avoid:'복잡한 배경, 과장된 의료 이미지, 저급한 할인 느낌' }
+      },
+      {
+        name: '광고 배너 캠페인',
+        desc: '짧고 선명한 퍼포먼스 배너',
+        values: { designType:'광고 배너', platform:'Meta Ads', styleTone:'테크 모던', target:'온라인 광고 클릭 유저', brandMood:'전문성', colorMood:'블랙 모노', layoutType:'텍스트 오버레이형', ratio:'1:1', cta:'할인 혜택 확인', engine:'Stable Diffusion 계열', topic:'B2B 업무 자동화 솔루션', headline:'반복 업무를 자동화하세요', subline:'생산성을 높이는 팀 단위 AI 시스템', mustInclude:'짧은 카피, 로고 영역, 버튼 영역, 강한 명암 대비', avoid:'복잡한 일러스트, 산만한 아이콘, 설명 과다' }
+      }
+    ];
+
+    const el = id => document.getElementById(id);
+    const promptOutput = el('promptOutput');
+    const previewGrid = el('previewGrid');
+    const summaryGrid = el('summaryGrid');
+    const historyList = el('historyList');
+    const modeLabel = el('modeLabel');
+    let mode = 'long';
+    let lastLong = '';
+    let lastShort = '';
+    let history = JSON.parse(localStorage.getItem('promptcanvas-studio-history') || '[]');
+
+    function fillSelect(id, values) {
+      el(id).innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
+    Object.entries(options).forEach(([id, values]) => fillSelect(id, values));
+
+    function renderPresets() {
+      el('presetGrid').innerHTML = presets.map((p, i) => `
+        <button class="preset-btn" data-preset="${i}">
+          <strong>${p.name}</strong>
+          <small>${p.desc}</small>
+        </button>
+      `).join('');
+      [...document.querySelectorAll('[data-preset]')].forEach(btn => {
+        btn.addEventListener('click', () => applyValues(presets[Number(btn.dataset.preset)].values, true));
+      });
+    }
+
+    function applyValues(values, autoGenerate = false) {
+      Object.entries(values).forEach(([k, v]) => { if (el(k)) el(k).value = v; });
+      saveState();
+      if (autoGenerate) renderAll();
+    }
+
+    function getValues() {
+      return {
+        designType: el('designType').value,
+        platform: el('platform').value,
+        styleTone: el('styleTone').value,
+        target: el('target').value.trim(),
+        brandMood: el('brandMood').value,
+        colorMood: el('colorMood').value,
+        layoutType: el('layoutType').value,
+        ratio: el('ratio').value,
+        cta: el('cta').value,
+        engine: el('engine').value,
+        topic: el('topic').value.trim(),
+        headline: el('headline').value.trim(),
+        subline: el('subline').value.trim(),
+        mustInclude: el('mustInclude').value.trim(),
+        avoid: el('avoid').value.trim()
+      };
+    }
+
+    function withFallback(v, d) { return v && v.length ? v : d; }
+
+    function colorToken(colorMood) {
+      return {
+        '퍼플 네온': ['var(--preview-a)', 'dark'],
+        '민트 시안': ['var(--preview-b)', 'dark'],
+        '웜 오렌지': ['var(--preview-c)', 'dark'],
+        '블랙 모노': ['var(--preview-d)', 'dark'],
+        '뉴트럴 베이지': ['var(--preview-e)', 'light']
+      }[colorMood] || ['var(--preview-a)', 'dark'];
+    }
+
+    function buildLongPrompt(d) {
+      return `Create a ${d.designType} for ${d.platform}. The subject is ${withFallback(d.topic, 'a campaign or product offer')}. The main headline is "${withFallback(d.headline, 'deliver a strong and persuasive visual message')}" and the supporting message is "${withFallback(d.subline, 'make the value easy to understand at first glance')}".
+
+Use a ${d.styleTone} direction with a ${d.brandMood} brand feeling, ${d.colorMood} palette, ${d.layoutType} composition, and ${d.ratio} aspect ratio. The target audience is ${withFallback(d.target, 'broad online consumers')}. The design should look polished, high-converting, and commercially art-directed.
+
+Must include:
+- ${withFallback(d.mustInclude, 'clear headline space, strong hierarchy, readable Korean text area, and a focused hero visual')}
+- CTA intent: ${d.cta}
+- optimized for ${d.engine}
+
+Visual guidance:
+- create a professional marketing asset with modern layout discipline
+- reserve clean Korean text areas for title, subtitle, and benefit highlights
+- maintain strong focal hierarchy, scroll-stopping composition, and production-ready finish
+- make the overall output feel realistic, premium, and brand-consistent
+
+Avoid:
+- ${withFallback(d.avoid, 'visual clutter, cheap stock feeling, awkward typography, low readability')}
+
+Output goal:
+A production-ready ${d.designType} prompt that can generate a highly usable marketing visual with strong conversion potential.`;
+    }
+
+    function buildShortPrompt(d) {
+      return `${d.designType}, ${withFallback(d.topic, 'campaign')}, ${withFallback(d.headline, 'strong headline')}, ${withFallback(d.subline, 'clear supporting line')}, ${d.styleTone}, ${d.brandMood}, ${d.colorMood}, ${d.layoutType}, ${d.ratio}, target ${withFallback(d.target, 'general audience')}, include ${withFallback(d.mustInclude, 'clean text area and strong visual hierarchy')}, CTA ${d.cta}, avoid ${withFallback(d.avoid, 'clutter and cheap stock feeling')}, polished commercial design`;
+    }
+
+    function buildPreviewCard(d, variant = 0) {
+      const [bg, tone] = colorToken(d.colorMood);
+      const lightClass = tone === 'light' ? 'mock-light' : 'mock-dark';
+      const eyebrow = d.designType === '유튜브 썸네일' ? 'CLICK BOOST' : d.designType === '온라인 쇼핑 상세페이지' ? 'BEST VALUE' : d.designType === '광고 배너' ? 'PERFORMANCE AD' : d.designType === '인스타그램 포스트' ? 'SOCIAL POST' : 'CARD NEWS';
+      const chips = [d.styleTone, d.brandMood, d.cta].filter(Boolean).slice(0, 3).map(c => `<span class="chip">${c}</span>`).join('');
+      const priceBlock = d.designType === '온라인 쇼핑 상세페이지' ? `<div class="price-box">혜택가 · TODAY ONLY</div>` : `<div class="label-box">${d.platform}</div>`;
+      const visualAccent = variant === 0
+        ? `<div style="position:absolute; right:18px; top:18px; width:92px; height:92px; border-radius:24px; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18);"></div>`
+        : `<div style="position:absolute; right:18px; top:18px; width:108px; height:108px; border-radius:999px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18);"></div>`;
+      return `
+        <article class="mock-card ${lightClass}" style="background:${bg}; min-height:${d.ratio === '16:9' ? '260px' : d.ratio === '9:16' ? '380px' : '320px'};">
+          ${visualAccent}
+          <div class="inner">
+            <div class="eyebrow">${eyebrow}</div>
+            <div class="hero-copy">${withFallback(d.headline, '핵심 메시지를 여기에')}</div>
+            <div class="sub-copy">${withFallback(d.subline, '보조 메시지와 핵심 혜택을 직관적으로 전달하는 시안입니다.')}</div>
+            <div class="chip-row">${chips}</div>
+          </div>
+          <div class="footer-zone">
+            ${priceBlock}
+            <div class="cta-btn">${d.cta}</div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderSummary(d) {
+      const items = [
+        ['유형', d.designType],
+        ['플랫폼', d.platform],
+        ['타깃', withFallback(d.target, '미입력')],
+        ['비율', d.ratio]
+      ];
+      summaryGrid.innerHTML = items.map(([k, v]) => `<div class="summary-item"><strong>${k}</strong><span>${v}</span></div>`).join('');
+    }
+
+    function renderPreview(d) {
+      previewGrid.innerHTML = buildPreviewCard(d, 0) + buildPreviewCard({ ...d, headline: withFallback(d.headline, '핵심 메시지') + (d.designType === '카드뉴스' ? ' 1장 커버' : ' A안'), subline: withFallback(d.subline, '브랜드 톤을 유지한 두 번째 시안') }, 1);
+    }
+
+    function renderPrompt() {
+      const d = getValues();
+      lastLong = buildLongPrompt(d);
+      lastShort = buildShortPrompt(d);
+      promptOutput.textContent = mode === 'long' ? lastLong : lastShort;
+      modeLabel.textContent = mode === 'long' ? '상세 프롬프트' : '짧은 프롬프트';
+      renderSummary(d);
+      renderPreview(d);
+    }
+
+    function renderAll(addToHistory = true) {
+      renderPrompt();
+      saveState();
+      if (addToHistory) pushHistory();
+    }
+
+    function saveState() {
+      localStorage.setItem('promptcanvas-studio-state', JSON.stringify(getValues()));
+    }
+
+    function restoreState() {
+      const saved = localStorage.getItem('promptcanvas-studio-state');
+      if (!saved) return applyValues(presets[0].values, true);
+      try {
+        applyValues(JSON.parse(saved), true);
+      } catch(e) {
+        applyValues(presets[0].values, true);
+      }
+    }
+
+    function showToast(message) {
+      const t = el('toast');
+      t.textContent = message;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1500);
+    }
+
+    async function copyPrompt() {
+      const text = promptOutput.textContent.trim();
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      showToast('프롬프트 복사 완료');
+    }
+
+    function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function randomize() {
+      const randomData = {
+        designType: randomPick(options.designType),
+        platform: randomPick(options.platform),
+        styleTone: randomPick(options.styleTone),
+        target: randomPick(['20~30대 여성 직장인','온라인 셀러','브랜드 마케터','초보 창업자','건강 관심층','자기계발 관심층']),
+        brandMood: randomPick(options.brandMood),
+        colorMood: randomPick(options.colorMood),
+        layoutType: randomPick(options.layoutType),
+        ratio: randomPick(options.ratio),
+        cta: randomPick(options.cta),
+        engine: randomPick(options.engine),
+        topic: randomPick(['여름 세일 캠페인','신제품 런칭','AI 강의 모집','기능성 식품 판매','브랜드 리뉴얼 홍보']),
+        headline: randomPick(['지금 가장 필요한 핵심 솔루션','구매를 만드는 첫 인상','매일 쓰고 싶은 프리미엄 루틴','한눈에 이해되는 강력한 혜택','성과를 높이는 스마트한 선택']),
+        subline: randomPick(['짧고 강하게 핵심만 전달하세요','정보와 감도를 함께 담은 디자인','전환율 중심 구조로 설계된 시안','브랜드 톤을 유지한 고급형 비주얼','모바일에서도 읽히는 선명한 구성']),
+        mustInclude: randomPick(['제품 정면 컷, 혜택 배지, CTA 영역','강한 타이틀, 브랜드 로고, 대비 배경','가격 포인트, 비교 요소, 구매 유도 버튼','한글 제목 공간, 핵심 효능 3개, 포인트 컬러']),
+        avoid: randomPick(['복잡한 배경, 저가형 느낌','과도한 장식, 텍스트 과밀','올드한 광고 느낌, 낮은 가독성','불필요한 3D 효과, 산만한 구성'])
+      };
+      applyValues(randomData, true);
+    }
+
+    function downloadTxt() {
+      const blob = new Blob([promptOutput.textContent], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'promptcanvas-prompt.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('TXT 저장 완료');
+    }
+
+    function pushHistory() {
+      const d = getValues();
+      const item = {
+        id: Date.now(),
+        title: withFallback(d.headline, d.designType),
+        meta: `${d.designType} · ${d.platform} · ${d.colorMood}`,
+        values: d
+      };
+      history = [item, ...history.filter(h => h.title !== item.title)].slice(0, 6);
+      localStorage.setItem('promptcanvas-studio-history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (!history.length) {
+        historyList.innerHTML = '<div class="mini-card"><h3>저장된 프리셋</h3><p>아직 저장된 프리셋이 없습니다. 조합을 만든 뒤 “프리셋 저장”을 눌러보세요.</p></div>';
+        return;
+      }
+      historyList.innerHTML = `
+        <div class="mini-card">
+          <h3>최근 저장 프리셋</h3>
+          <div class="history-list">
+            ${history.map(h => `<div class="history-item" data-history="${h.id}"><strong>${h.title}</strong><span>${h.meta}</span></div>`).join('')}
+          </div>
+        </div>
+      `;
+      [...document.querySelectorAll('[data-history]')].forEach(item => {
+        item.addEventListener('click', () => {
+          const found = history.find(h => String(h.id) === item.dataset.history);
+          if (found) applyValues(found.values, true);
+        });
+      });
+    }
+
+    function savePreset() {
+      pushHistory();
+      showToast('프리셋 저장 완료');
+    }
+
+    function resetAll() {
+      applyValues(presets[0].values, true);
+      history = [];
+      localStorage.removeItem('promptcanvas-studio-history');
+      renderHistory();
+      showToast('초기화 완료');
+    }
+
+    el('generateBtn').addEventListener('click', () => renderAll(true));
+    el('copyBtn').addEventListener('click', copyPrompt);
+    el('randomBtn').addEventListener('click', randomize);
+    el('saveBtn').addEventListener('click', savePreset);
+    el('resetBtn').addEventListener('click', resetAll);
+    el('downloadBtn').addEventListener('click', downloadTxt);
+    el('shortBtn').addEventListener('click', () => { mode = 'short'; renderPrompt(); });
+    el('longBtn').addEventListener('click', () => { mode = 'long'; renderPrompt(); });
+    [...document.querySelectorAll('input, select, textarea')].forEach(node => node.addEventListener('change', saveState));
+
+    renderPresets();
+    renderHistory();
+    restoreState();
+  </script>
+</body>
+</html>
