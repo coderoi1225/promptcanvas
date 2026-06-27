@@ -74,7 +74,15 @@ promptcanvas/
 │   └── reference/          ← 참고 이미지
 ```
 
-## 8. 다음 할 일 (우선순위)
+## 8. 배포 / 링크 (2026-06-27 구축)
+
+- **라이브 URL:** https://promptcanvas-mu.vercel.app (공유·평가용)
+- **GitHub:** https://github.com/coderoi1225/promptcanvas (`main` 브랜치)
+- **Vercel:** `holaroy` 팀 / 프로젝트 `promptcanvas`, GitHub 연동 자동배포.
+- **흐름:** 코드 수정 → `git push` → Vercel 자동 재배포. (다른 노트북: `git clone` 후 작업)
+- 시크릿 없음(정적 앱)이라 공개 배포 안전. API키·서버 0.
+
+## 9. 다음 할 일 (우선순위)
 
 1. **웹앱 프롬프트 업그레이드** — 지금은 옵션을 단순 나열만 함.
    → Claude가 진짜 잘 알아듣는 "구조화된 디자인 프롬프트"로 개선. (이게 핵심 무기)

@@ -3,6 +3,11 @@
 카드뉴스·유튜브 썸네일·상세페이지·배너·인스타 포스트 등
 **디자인용 AI 프롬프트**를 옵션 조합으로 뽑아주는 정적 웹앱.
 
+🔗 **라이브:** https://promptcanvas-mu.vercel.app
+📦 **소스:** https://github.com/coderoi1225/promptcanvas
+
+> `main`에 push하면 Vercel이 자동으로 재배포합니다 (어느 노트북에서든 작업 가능).
+
 ## 쓰는 법
 
 1. `index.html`을 브라우저로 더블클릭해서 열기 (설치·로그인 불필요)
