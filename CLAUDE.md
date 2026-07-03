@@ -110,3 +110,8 @@ git clone https://github.com/coderoi1225/promptcanvas
 
 - 프로그램 작업이 끝나면 **노션에 작업 기록**을 남긴다 (형석님 요청).
   - 위치: 노션 "클로드 프로젝트 관리" → "PromptCanvas (디자인 프롬프트 빌더)" 페이지에 날짜별 기록 추가.
+
+## OLLAS 연결
+
+- 판단·현황이 필요하면 ~/projects/OLLAS/OLLAS/cockpit/현황/ 을 먼저 읽는다
+- 세션 마감 시 커밋·push하고, 볼트 현황에 반영할 결정이 있으면 제안한다
