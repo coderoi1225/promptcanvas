@@ -115,4 +115,4 @@ git clone https://github.com/coderoi1225/promptcanvas
 
 - 판단·현황이 필요하면 ~/projects/OLLAS/OLLAS/cockpit/decisions/ 최신 날짜 스냅샷을 읽는다
   (구 cockpit/현황/은 2026-07-16 은퇴 · 나에 대한 불변 사실 = cockpit/identity/나-프로필.md)
-- 세션 마감 시 커밋·push하고, 볼트 현황에 반영할 결정이 있으면 제안한다
+- 세션 마감 시 커밋·push하고, 볼트에 남길 결정이 있으면 새 날짜 스냅샷(cockpit/decisions/YYYY-MM-DD-*.md)을 제안한다 (2층은 형석님만 수정)
