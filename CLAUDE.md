@@ -113,6 +113,7 @@ git clone https://github.com/coderoi1225/promptcanvas
 
 ## OLLAS 연결
 
-- 판단·현황이 필요하면 ~/projects/OLLAS/OLLAS/cockpit/decisions/ 최신 날짜 스냅샷을 읽는다
-  (구 cockpit/현황/은 2026-07-16 은퇴 · 나에 대한 불변 사실 = cockpit/identity/나-프로필.md)
-- 세션 마감 시 커밋·push하고, 볼트에 남길 결정이 있으면 새 날짜 스냅샷(cockpit/decisions/YYYY-MM-DD-*.md)을 제안한다 (2층은 형석님만 수정)
+- ⛔ **OLLAS 자료를 읽지 마라 (2026-07-17 형석님 확정).** wiki·raw·syntheses·decisions·현황 스냅샷 — 자동으로 펴지 않는다.
+  근거: 자료 127개 1차출처 전수검증 결과 **믿을 수 있는 건 12%뿐**, 88%는 AI가 만든 것(지어낸 숫자 포함). 읽으면 안개를 근거로 답하게 된다.
+  ✅ 예외 하나 = `~/projects/OLLAS/OLLAS/cockpit/identity/나-프로필.md` (심판·정체성·소통축 — 형석님이 직접 쓴 것). 사업·방향이 걸리면 이것만 편다.
+- 세션 마감 시 커밋·push하고, 전체에 의미있는 결정·완성이면 OLLAS `journal/<오늘날짜>.md`에 **한 줄** 남길지 제안한다 (쓰기는 계속한다).
